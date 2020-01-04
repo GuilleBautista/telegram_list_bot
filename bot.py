@@ -14,19 +14,6 @@ from time import sleep
 
 update_id = None
 
-
-def main():
-    """Run the bot."""
-    updater = Updater(open("token", "r").read(), use_context=True)
-
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
-
-    dp.add_handler(CommandHandler('add', echo))
-
-    updater.start_polling()
-    updater.idle()
-
 def getlist(chat):
     #we try to open a previous list
     try:
@@ -38,6 +25,12 @@ def getlist(chat):
         file.close()
         #then we return the file
         return open("lists/"+str(chat), 'r+' )
+
+def start(update, context):
+    chat_id=update.message.chat.id
+
+    f = open("lists/"+str(chat_id), 'w')
+    f.close()
 
 '''adds an item to a file and returns the list string'''
 def additem(l_file, text):
@@ -56,12 +49,6 @@ def additem(l_file, text):
     return l_file.read()
 
 def echo(update, context):
-    """Echo the message the user sent."""
-    #global update_id
-    # Request updates after the last update_id
-    #for update in bot.get_updates(offset=update_id, timeout=10):
-        #update_id = update.update_id + 1
-
     message=update.message
     chat=update.message.chat.id
 
@@ -82,6 +69,23 @@ def echo(update, context):
         #append the new element
         #list_content.append(message.text+'\n')
             
+
+def main():
+    """Run the bot."""
+    updater = Updater(open("token", "r").read(), use_context=True)
+
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+    
+    dp.add_handler(CommandHandler('start', start))
+    dp.add_handler(CommandHandler('add', echo))
+
+    print('started succesfully')
+    updater.start_polling()
+    updater.idle()
+
+
+
 
 if __name__ == '__main__':
     main()
