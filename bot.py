@@ -21,18 +21,6 @@ if len(sys.argv)>1:
     path_to_bot=sys.argv[1]
     print(path_to_bot)
 
-def main():
-    """Run the bot."""
-    updater = Updater(open(path_to_bot+"token", "r").read(), use_context=True)
-
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
-
-    dp.add_handler(CommandHandler('add', add))
-
-    updater.start_polling()
-    updater.idle()
-
 def getlist(chat):
     #we try to open a previous list
     try:
@@ -45,15 +33,15 @@ def getlist(chat):
         #then we return the file
         return open(path_to_bot+"lists/"+str(chat), 'r+' )
 
+def start(update, context):
+    chat_id=update.message.chat.id
+
+    f = open("lists/"+str(chat_id), 'w')
+    f.close()
+
 '''adds an item to a file and returns the list string'''
 
 def add(update, context):
-    """Echo the message the user sent."""
-    #global update_id
-    # Request updates after the last update_id
-    #for update in bot.get_updates(offset=update_id, timeout=10):
-        #update_id = update.update_id + 1
-
     message=update.message
     chat=update.message.chat.id
     text=message.text[4:]
@@ -88,16 +76,44 @@ def add(update, context):
     print(new_list_id)
 
     #pin the new list
-    if len(message.text[4:])>0:
+    if len(message.text[5:])>0:
         if bot.pin_chat_message(chat, new_list_id):
             print('Pinned')
         print('AAAAAAAAAAAAAAAAA')
+        
+        output=additem(getlist(chat), message.text[5:])
+        #send list content back
+        print("replying")
+        
+        update.message.reply_text(output).message_id
+        
+        print("replied")
+       
+        #pint the new list
+        #bot.pin_chat_message(chat, new_list_id)
 
         #save the list in an actual list
         #list_content=l_file.readlines()
         #append the new element
         #list_content.append(message.text+'\n')
             
+
+def main():
+    """Run the bot."""
+    updater = Updater(open("token", "r").read(), use_context=True)
+
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+    
+    dp.add_handler(CommandHandler('start', start))
+    dp.add_handler(CommandHandler('add', add))
+
+    print('started succesfully')
+    updater.start_polling()
+    updater.idle()
+
+
+
 
 if __name__ == '__main__':
     main()
