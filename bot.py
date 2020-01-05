@@ -57,12 +57,16 @@ def echo(update, context):
         update.message.reply_text("to view the list use /show").message_id
 
     else:
-        output=additem(getlist(chat), message.text[4:])
-        print(output)
+        output=additem(getlist(chat), message.text[5:])
         #send list content back
-        new_list_id = update.message.reply_text(output).message_id
+        print("replying")
+        
+        update.message.reply_text(output).message_id
+        
+        print("replied")
+       
         #pint the new list
-        bot.pin_chat_message(chat, new_list_id)
+        #bot.pin_chat_message(chat, new_list_id)
 
         #save the list in an actual list
         #list_content=l_file.readlines()
