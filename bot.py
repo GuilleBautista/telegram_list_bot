@@ -1,28 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Simple Bot to reply to Telegram messages.
-This is built on the API wrapper, see echobot2.py to see the same example built
-on the telegram.ext bot framework.
-This program is dedicated to the public domain under the CC0 license.
-"""
+
 import logging
 import telegram
 from telegram.error import NetworkError, Unauthorized
 from telegram.ext import CommandHandler, Updater
 from time import sleep
-
+import sys
 
 update_id = None
 
+'''
+You need to get the path to the bot as an argument, by default it is ""
+This is if you want to run a script when your system boots
+'''
+
+path_to_bot=''
+
+if len(sys.argv)>1:
+    path_to_bot=sys.argv[1]
+    print(path_to_bot)
 
 def main():
     """Run the bot."""
-    updater = Updater(open("token", "r").read(), use_context=True)
+    updater = Updater(open(path_to_bot+"token", "r").read(), use_context=True)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
-    dp.add_handler(CommandHandler('add', echo))
+    dp.add_handler(CommandHandler('add', add))
 
     updater.start_polling()
     updater.idle()
@@ -30,32 +36,18 @@ def main():
 def getlist(chat):
     #we try to open a previous list
     try:
-        return open("lists/"+str(chat), 'r+' )
+        return open(path_to_bot+"lists/"+str(chat), 'r+' )
     except FileNotFoundError:
         #if we dont have a list for this chat we create it empty
-        file=open("lists/"+str(chat), 'w' )
+        file=open(path_to_bot+"lists/"+str(chat), 'w' )
         file.write("")
         file.close()
         #then we return the file
-        return open("lists/"+str(chat), 'r+' )
+        return open(path_to_bot+"lists/"+str(chat), 'r+' )
 
 '''adds an item to a file and returns the list string'''
-def additem(l_file, text):
-    #write the new list in the file
-    lines=l_file.readlines()
 
-    lines.append(text+"\n")
-    print(lines)
-    l_file.writelines(lines)
-
-    #create a message to send
-    '''send=''
-    for i in l_file.readlines():
-        send+=i'''
-    
-    return l_file.read()
-
-def echo(update, context):
+def add(update, context):
     """Echo the message the user sent."""
     #global update_id
     # Request updates after the last update_id
@@ -64,18 +56,42 @@ def echo(update, context):
 
     message=update.message
     chat=update.message.chat.id
-
+    text=message.text[4:]
     #print( message.text[5:])
-    if len(message.text[4:])==0:
-        update.message.reply_text("to view the list use /show").message_id
+    output=''
+    if len(text)==0:
+        output = "you cannot add an empty entry to the list"
 
     else:
-        output=additem(getlist(chat), message.text[4:])
-        print(output)
-        #send list content back
-        new_list_id = update.message.reply_text(output).message_id
-        #pint the new list
-        bot.pin_chat_message(chat, new_list_id)
+        '''Open the file and save the contents in a variable'''
+        list_file=open(path_to_bot+'lists/'+str(chat), 'r')
+        list_content=list_file.readlines()
+        list_file.close()
+
+        '''Add the entry to the list '''
+        list_content.append(text+"\n")
+    
+        list_file=open(path_to_bot+'lists/'+str(chat), 'w')
+
+        for l in list_content:
+            output+=l
+            #print(l)
+            list_file.write(l)
+
+
+        list_file.close()
+        list_content = []
+
+    '''We send the output back to the user'''
+    new_list_id = update.message.reply_text(output).message_id
+
+    print(new_list_id)
+
+    #pin the new list
+    if len(message.text[4:])>0:
+        if bot.pin_chat_message(chat, new_list_id):
+            print('Pinned')
+        print('AAAAAAAAAAAAAAAAA')
 
         #save the list in an actual list
         #list_content=l_file.readlines()
